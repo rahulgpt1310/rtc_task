@@ -1,26 +1,36 @@
-import Message from '../models/messageModel.js';
-import user from '../models/userModel.js';
-import Chat from '../models/chatModel.js';
+import Message from "../models/messageModel.js";
+import user from "../models/userModel.js";
+import Chat from "../models/chatModel.js";
+import { decryptData } from "../middleware/decrypt.js";
+import { encryptData } from "../middleware/encrypt.js";
 export const sendMessage = async (req, res) => {
-  const { chatId, message } = req.body;
+  let decryptResult = await decryptData(data);
+  const { chatId, message, image } = decryptResult;
+
   try {
-    let msg = await Message.create({ sender: req.rootUserId, message, chatId });
+    let msg = await Message.create({
+      sender: req.rootUserId,
+      message,
+      chatId,
+      image,
+    });
     msg = await (
-      await msg.populate('sender', 'name profilePic email')
+      await msg.populate("sender", "name profilePic email")
     ).populate({
-      path: 'chatId',
-      select: 'chatName isGroup users',
-      model: 'Chat',
+      path: "chatId",
+      select: "chatName isGroup users",
+      model: "Chat",
       populate: {
-        path: 'users',
-        select: 'name email profilePic',
-        model: 'User',
+        path: "users",
+        select: "name email profilePic",
+        model: "User",
       },
     });
     await Chat.findByIdAndUpdate(chatId, {
       latestMessage: msg,
     });
-    res.status(200).send(msg);
+    let encryptResult = encryptData(msg);
+    res.status(200).send({ status: 200, data: encryptResult });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error });
@@ -31,13 +41,13 @@ export const getMessages = async (req, res) => {
   try {
     let messages = await Message.find({ chatId })
       .populate({
-        path: 'sender',
-        model: 'User',
-        select: 'name profilePic email',
+        path: "sender",
+        model: "User",
+        select: "name profilePic email",
       })
       .populate({
-        path: 'chatId',
-        model: 'Chat',
+        path: "chatId",
+        model: "Chat",
       });
 
     res.status(200).json(messages);
