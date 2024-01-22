@@ -5,20 +5,20 @@ import mongoose from "mongoose";
 import bodyParser from "body-parser";
 import cors from "cors";
 import userRoutes from "./routes/user.js";
-import chatRoutes from "./routes/chat.js";
+// import chatRoutes from "./routes/chat.js";
 import messageRoutes from "./routes/message.js";
 import * as Server from "socket.io";
 
 const app = express();
-const corsConfig = {
-  origin: process.env.BASE_URL,
-  credentials: true,
-};
+// const corsConfig = {
+//   origin: process.env.BASE_URL,
+//   credentials: true,
+// };
 const PORT = process.env.PORT || 8080;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors(corsConfig));
+app.use(cors()); //corsConfig
 app.use("/", userRoutes);
 // app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
@@ -30,7 +30,7 @@ const server = app.listen(PORT, () => {
 const io = new Server.Server(server, {
   pingTimeout: 60000,
   cors: {
-    origin: "http://localhost:5173",
+    origin: "*",
   },
 });
 io.on("connection", (socket) => {
@@ -38,11 +38,11 @@ io.on("connection", (socket) => {
     socket.join(userData.id);
     socket.emit("connected");
   });
-  socket.on("join room", (room) => {
-    socket.join(room);
-  });
-  socket.on("typing", (room) => socket.in(room).emit("typing"));
-  socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
+  // socket.on("join room", (room) => {
+  //   socket.join(room);
+  // });
+  // socket.on("typing", (room) => socket.in(room).emit("typing"));
+  // socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
 
   socket.on("new message", (newMessageRecieve) => {
     var chat = newMessageRecieve.chatId;

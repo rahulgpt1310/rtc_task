@@ -4,10 +4,10 @@ import Chat from "../models/chatModel.js";
 import { decryptData } from "../middleware/decrypt.js";
 import { encryptData } from "../middleware/encrypt.js";
 export const sendMessage = async (req, res) => {
-  let decryptResult = await decryptData(data);
-  const { chatId, message, image } = decryptResult;
-
   try {
+    let decryptResult = await decryptData(req.body.data);
+    const { chatId, message, image } = decryptResult;
+
     let msg = await Message.create({
       sender: req.rootUserId,
       message,
@@ -29,7 +29,7 @@ export const sendMessage = async (req, res) => {
     await Chat.findByIdAndUpdate(chatId, {
       latestMessage: msg,
     });
-    let encryptResult = encryptData(msg);
+    let encryptResult = await encryptData({ msg: "message send" });
     res.status(200).send({ status: 200, data: encryptResult });
   } catch (error) {
     console.log(error);
